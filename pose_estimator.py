@@ -48,8 +48,8 @@ with python.vision.PoseLandmarker.create_from_options(options) as landmarker: #d
         if ret == True:
             mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=frame)
             calc_timestamps.append(int(calc_timestamps[-1]+1000/fps)) #calculando o tempo do video com o FPS
-
             detection_result = landmarker.detect_for_video(mp_image, calc_timestamps[-1])
+            frame = draw_landmarks_on_image(frame, detection_result) #executa o desenho das conexões entre os pontos
             cv2.imshow('Frame', frame)
 
             #Aperta Q para fechar o video
