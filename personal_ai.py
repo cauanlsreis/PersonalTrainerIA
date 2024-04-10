@@ -89,7 +89,7 @@ class PersonalAI:
                 else:
                     break
         
-        self.image_q((1, 1, "done"))
+        self.image_q.put((1, 1, "done"))
         cap.release() #encerra a captura de video
         cv2.destroyAllWindows() #fecha as janelas criadas pelo OpenCV
 
