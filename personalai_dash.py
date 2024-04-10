@@ -11,6 +11,9 @@ personalAI.run(True)
 
 placeholder = st.empty()
 while True:
-    frame = personalAI.image_q.get()
-    with placeholder.container():
-        st.image(frame)
+    frame,landmarks, ts = personalAI.image_q.get()
+    
+    if len(landmarks.pose_landmarks)>0:
+        frame, elbow_angle = personalAI.find_angle(frame, landmarks, 12, 14, 16, True)
+        with placeholder.container():
+            st.image(frame)
