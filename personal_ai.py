@@ -1,22 +1,23 @@
 import cv2
 import mediapipe as mp
 from mediapipe.tasks import python #processa dados da análise das imagens
+from mediapipe.tasks.python import vision
 import numpy as np #para manipulação de arrays
 from mediapipe import solutions
 from mediapipe.framework.formats import landmark_pb2
-
-#file_name = 'IMG_2149.mp4'
-model_path = 'pose_landmarker_full.task'
+import threading
+import queue
 
 class PersonalAI:
     def __init__(self, file_name='IMG_2149.mp4'):
         self.file_name = file_name
+        self.image_q = queue.Queue()
         model_path = 'pose_landmarker_full.task'
 
         #Estima onde estão os membros da pessoa do video
-        self.options = python.vision.PoseLandmarkerOptions(
+        self.options = vision.PoseLandmarkerOptions(
             base_options=python.BaseOptions(model_asset_path=model_path),
-            running_mode=python.vision.RunningMode.VIDEO)  # define que o exemplo utilizado no projeto é um video pronto
+            running_mode=vision.RunningMode.VIDEO)  # define que o exemplo utilizado no projeto é um video pronto
 
     #método de desenho
     def draw_landmarks_on_image(self, rgb_image, detection_result):
@@ -41,7 +42,7 @@ class PersonalAI:
 
     def process_video(self, draw, display):
         #Processamento de imagem
-        with python.vision.PoseLandmarker.create_from_options(self.options) as landmarker: #detector
+        with vision.PoseLandmarker.create_from_options(self.options) as landmarker: #detector
             cap = cv2.VideoCapture(self.file_name)
             calc_timestamps = [0.0]
             #executando o video
@@ -58,16 +59,23 @@ class PersonalAI:
                     if draw:
                         frame = self.draw_landmarks_on_image(frame, detection_result) #executa o desenho das conexões entre os pontos
 
+
                     if display:
                         cv2.imshow('Frame', frame)
                         #Aperta Q para fechar o video
                         if cv2.waitKey(25) & 0xFF == ord('q'):
                             break
+                    frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+                    self.image_q.put(frame)
                 else:
                     break
 
         cap.release() #encerra a captura de video
         cv2.destroyAllWindows() #fecha as janelas criadas pelo OpenCV
+
+    def run(self, draw, display=False):
+        t1 = threading.Thread(target=self.process_video, args=(draw, display))
+        t1.start()
 
 if __name__ == "__main__":
     personalAI = PersonalAI()
